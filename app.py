@@ -41,8 +41,14 @@ def preprocessar_imagem(image, target_size=(50, 50)):
     # Redimensiona a imagem
     image = image.resize(target_size)
     
-    # Converte para array numpy e adiciona uma dimensão de batch
+    # Converte para array numpy
     img_array = np.array(image)
+    
+    # *** CORREÇÃO 1: Normaliza os valores dos pixels para o intervalo [0, 1] ***
+    # Isso é crucial para corresponder ao pré-processamento do treinamento.
+    img_array = img_array / 255.0
+    
+    # Adiciona uma dimensão de batch
     img_array = np.expand_dims(img_array, axis=0) # Cria um batch de 1 imagem
     
     return img_array
@@ -80,8 +86,12 @@ if modelo is not None and nomes_classes is not None:
             img_array = preprocessar_imagem(image)
             predicao = modelo.predict(img_array)
             
+            # *** CORREÇÃO 2: Remove a aplicação redundante do softmax ***
+            # A saída de 'modelo.predict' já é um array de probabilidades (scores)
+            # por causa da camada de ativação 'softmax' no modelo.
+            score = predicao[0]
+            
             # Obtém a classe prevista e a confiança
-            score = tf.nn.softmax(predicao[0])
             classe_prevista = nomes_classes[np.argmax(score)]
             confianca = 100 * np.max(score)
 
